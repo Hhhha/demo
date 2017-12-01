@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>show</title>
+    <link href="layui/css/layui.css" rel="stylesheet" >
+</head>
+<body>
+    <div class="layui-container layui-bg-gray" >
+        <table id="demo" lay-filter="test"></table>
+    </div>
+</body>
+<script src="layui/layui.all.js" type="text/javascript"></script>
+<script type="text/html" id="toolbar">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+
+</script>
+<script type="text/javascript">
+    layui.use(["table","jquery"],function () {
+        var table = layui.table,
+            $ = layui.jquery;
+        window.tt = table.render({
+            elem:'#demo',
+            height:400,
+            url:'show.php',
+            page:true,
+            cols:[[
+                {field:'id',title:"ID",width:80,sort:true,fixed:'left'},
+                {field:'username',title:"用户名",width:80},
+                {field:'password',title:"密码",width:80},
+                {title:'操作',fixed:'right',width:200,align:'center',toolbar:'#toolbar'}
+            ]]
+        });
+        table.on('tool(test)',function(obj){
+            var data = obj.data;    //  当前行的数据
+            var event = obj.event;  //  当前点击的lay-event
+            if (event === "edit"){
+                layer.open({
+                    title:'编辑用户',
+                    type: 2,
+                    content: 'http://www.demo.com/update.php?id=' + data.id,
+                    area:['400px','250px']
+                });
+            }else if(event === "del"){
+                layer.confirm("是否删除！",{icon:3,title:'警告'},function (index) {
+                    //  load层
+
+                    var load = layer.load(3, {time: 3*1000}); //又换了种风格，并且设定最长等待3秒
+
+                    //  发送ajax请求
+                    $.ajax({
+                        type: "POST",
+                        url: "ajaxDeleteUser.php",
+                        data: "id="+data.id,
+                            success: function(json){
+                            var msg = $.parseJSON(json);
+                            if (msg.result == true){
+                                layer.msg(msg.info,{icon:6});
+                                obj.tr.del();   //  删除DOM
+                            }else{
+                                layer.msg(msg.info,{icon:5});
+                            }
+                            layer.close(load)
+                        }
+                    });
+                    layer.close(index)
+                });
+            }
+        })
+    })
+</script>
+</html>
